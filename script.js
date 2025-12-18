@@ -8,13 +8,13 @@ let reproductionTime = 500;
 let grid = new Array(rows);
 let nextGrid = new Array(rows);
 
-
-
 document.addEventListener('DOMContentLoaded', () => {
     createTable();
     initializeGrids();
     resetGrids();
     setupControlButtons();
+    updateView();
+    updateStats();
 });
 
 function resetGrids() {
@@ -33,13 +33,12 @@ function initializeGrids() {
     }
 }
 
-// lay out the board
 function createTable() {
     let gridContainer = document.getElementById("gridContainer");
     if (!gridContainer) {
-        // throw error
         console.error("Problem: no div for the grid table!");
     }
+
     let table = document.createElement("table");
 
     for (let i = 0; i < rows; i++) {
@@ -60,33 +59,32 @@ function cellClickHandler() {
     let rowcol = this.id.split("_");
     let row = rowcol[0];
     let col = rowcol[1];
-    let classes = this.getAttribute('class');
-    if (classes.indexOf('live') > -1) {
-        this.setAttribute('class', 'dead');
+
+    if (grid[row][col] === 1) {
         grid[row][col] = 0;
+        this.setAttribute("class", "dead");
     } else {
-        this.setAttribute('class', 'live');
         grid[row][col] = 1;
+        this.setAttribute("class", "live");
     }
+
+    updateStats();
 }
 
 function setupControlButtons() {
-
     let startButton = document.querySelector('#start');
     let clearButton = document.querySelector('#clear');
     let rButton = document.querySelector('#random');
 
     startButton.onclick = () => {
         if (playing) {
-            console.log('Pause the Game');
             playing = false;
-            startButton.innerHTML = 'continue';
+            startButton.innerHTML = 'pokračovat';
         } else {
-            console.log('Cont the game');
             playing = true;
-            startButton.innerHTML = 'pause';
+            startButton.innerHTML = 'pauza';
             play();
-        };
+        }
     };
 
     clearButton.onclick = () => {
@@ -94,30 +92,26 @@ function setupControlButtons() {
         startButton.innerHTML = "start";
         resetGrids();
         updateView();
+        updateStats();
     };
 
     rButton.onclick = () => {
         for (let i = 0; i < rows; i++) {
             for (let j = 0; j < cols; j++) {
                 grid[i][j] = Math.floor(Math.random() * 2);
-                var cell = document.getElementById(i + '_' + j);
-                if (grid[i][j] == 1) cell.setAttribute('class', 'live');
-                else cell.setAttribute('class', 'dead');
             }
         }
-    }
-
+        updateView();
+        updateStats();
+    };
 }
 
 function play() {
-    console.log("Play the game");
     computeNextGen();
-
     if (playing) {
         timer = setTimeout(play, reproductionTime);
     }
-
-};
+}
 
 function computeNextGen() {
     for (let i = 0; i < rows; i++) {
@@ -127,6 +121,7 @@ function computeNextGen() {
     }
     copyAndResetGrid();
     updateView();
+    updateStats();
 }
 
 function copyAndResetGrid() {
@@ -141,11 +136,11 @@ function copyAndResetGrid() {
 function updateView() {
     for (let i = 0; i < rows; i++) {
         for (let j = 0; j < cols; j++) {
-            let cell = document.getElementById(i + '_' + j);
-            if (grid[i][j] == 0) {
-                cell.setAttribute('class', 'dead');
+            let cell = document.getElementById(i + "_" + j);
+            if (grid[i][j] === 0) {
+                cell.setAttribute("class", "dead");
             } else {
-                cell.setAttribute('class', 'live');
+                cell.setAttribute("class", "live");
             }
         }
     }
@@ -154,48 +149,43 @@ function updateView() {
 function applyRules(row, col) {
     let numNeighbors = countNeighbors(row, col);
 
-    if (grid[row][col] == 1) {
-        if (numNeighbors < 2) {
-            nextGrid[row][col] = 0;
-        } else if (numNeighbors == 2 || numNeighbors == 3) {
-            nextGrid[row][col] = 1;
-        } else if (numNeighbors > 3) {
-            nextGrid[row][col] = 0;
-        }
-    } else if (grid[row][col] == 0) {
-        if (numNeighbors == 3) {
-            nextGrid[row][col] = 1;
-        }
+    if (grid[row][col] === 1) {
+        if (numNeighbors < 2) nextGrid[row][col] = 0;
+        else if (numNeighbors === 2 || numNeighbors === 3) nextGrid[row][col] = 1;
+        else nextGrid[row][col] = 0;
+    } else {
+        if (numNeighbors === 3) nextGrid[row][col] = 1;
     }
 }
 
-                                                                       
 function countNeighbors(row, col) {
     let count = 0;
 
-    if (row - 1 >= 0) {
-        if (grid[row - 1][col] == 1) count++;
-    }
-    if (row - 1 >= 0 && col - 1 >= 0) {
-        if (grid[row - 1][col - 1] == 1) count++;
-    }
-    if (row - 1 >= 0 && col + 1 < cols) {
-        if (grid[row - 1][col + 1] == 1) count++;  
-    }
-    if (col - 1 >= 0) {
-        if (grid[row][col - 1] == 1) count++;
-    }
-    if (col + 1 < cols) {
-        if (grid[row][col + 1] == 1) count++;
-    }
-    if (row + 1 < rows) {
-        if (grid[row + 1][col] == 1) count++;
-    }
-    if (row + 1 < rows && col - 1 >= 0) {
-        if (grid[row + 1][col - 1] == 1) count++;
-    }
-    if (row + 1 < rows && col + 1 < cols) {
-        if (grid[row + 1][col + 1] == 1) count++;
-    }
+    if (row - 1 >= 0 && grid[row - 1][col] === 1) count++;
+    if (row - 1 >= 0 && col - 1 >= 0 && grid[row - 1][col - 1] === 1) count++;
+    if (row - 1 >= 0 && col + 1 < cols && grid[row - 1][col + 1] === 1) count++;
+
+    if (col - 1 >= 0 && grid[row][col - 1] === 1) count++;
+    if (col + 1 < cols && grid[row][col + 1] === 1) count++;
+
+    if (row + 1 < rows && grid[row + 1][col] === 1) count++;
+    if (row + 1 < rows && col - 1 >= 0 && grid[row + 1][col - 1] === 1) count++;
+    if (row + 1 < rows && col + 1 < cols && grid[row + 1][col + 1] === 1) count++;
+
     return count;
+}
+
+function updateStats() {
+    let live = 0;
+
+    for (let i = 0; i < rows; i++) {
+        for (let j = 0; j < cols; j++) {
+            if (grid[i][j] === 1) live++;
+        }
+    }
+
+    let dead = rows * cols - live;
+
+    document.getElementById("liveCount").textContent = live;
+    document.getElementById("deadCount").textContent = dead;
 }

@@ -1,6 +1,15 @@
 body {
   padding: 20px;
   background-color: #444;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  padding: 20px;
+
+  background: radial-gradient( #1900f7, #a97af5);
+  font-family: Arial, sans-serif;
 }
 #gridContainer {
   padding-bottom: 10px;
@@ -20,3 +29,4 @@ td.dead {
 td.live {
   background-color: white;
 }
+
